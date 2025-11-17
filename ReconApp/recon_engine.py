@@ -442,10 +442,10 @@ def remove_internal_zeroes(df, tol=0.01):
 # -----------------------
 
 def finalize_and_save(trial_balance, entries, map_dir, ICP,
-                      build_fn=build_workbook,
+                      build_fn=build_recon_workbook,
                       plc_filename="PLC.xlsx"):
     """
-    Build full workbook (calls build_workbook), add front page, format numbers/dates,
+    Build full workbook (calls build_recon_workbook), add front page, format numbers/dates,
     save workbook and color sheet tabs with xlwings.
     Returns path to saved file.
     """
