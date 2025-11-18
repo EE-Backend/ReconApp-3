@@ -8,39 +8,43 @@ from recon_engine import generate_reconciliation_file
 # ============================================
 st.set_page_config(page_title="Recon File Generator", layout="wide")
 
-# Base directory of this file
+# Base directory
 BASE_DIR = Path(__file__).resolve().parent
 STATIC_DIR = BASE_DIR / "static"
 LOGO_PATH = STATIC_DIR / "logo.png"
 
 # ============================================
-# HEADER WITH LOGO + TITLE
+# CENTERED HEADER WITH LOGO + TITLE
 # ============================================
-col_logo, col_title = st.columns([1, 5])
+st.markdown("""
+    <div style="display: flex; flex-direction: column; align-items: center;">
+""", unsafe_allow_html=True)
 
-with col_logo:
-    if LOGO_PATH.exists():
-        st.image(str(LOGO_PATH), width=120)
-    else:
-        st.warning(f"Logo not found at {LOGO_PATH}")
-
-with col_title:
+# Logo
+if LOGO_PATH.exists():
     st.markdown(
-        """
-        <h1 style='margin-top: 10px; margin-bottom: 0px;'>
-            Recon File Generator
-        </h1>
-        """,
+        f"<img src='static/logo.png' style='width:130px; margin-bottom:5px;'>",
         unsafe_allow_html=True
     )
+else:
+    st.warning("Logo file not found in /static folder.")
 
-st.markdown("<div style='height:20px;'></div>", unsafe_allow_html=True)  # small spacing
+# Title
+st.markdown("""
+    <h1 style="margin-top:0px; padding-top:0px;">
+        Recon File Generator
+    </h1>
+""", unsafe_allow_html=True)
+
+st.markdown("</div>", unsafe_allow_html=True)
+
+# Small spacing before UI
+st.markdown("<div style='height:20px;'></div>", unsafe_allow_html=True)
 
 # ============================================
 # STEP 1 — INPUTS
 # ============================================
 st.markdown("## Step 1 — Upload Inputs")
-
 trial_balance_file = st.file_uploader(
     "Upload Trial Balance file",
     type=["xlsx"],
@@ -89,3 +93,4 @@ if st.button("Generate Recon File", type="primary"):
     )
 
 st.caption("European Energy — Internal Tool")
+
