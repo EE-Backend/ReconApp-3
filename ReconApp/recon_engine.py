@@ -155,21 +155,27 @@ def remove_internal_zeroes(df, tol=TOLERANCE):
 
     Document No. is intentionally ignored.
 
-    Also performs cumulative zero-block trimming as previously.
+    Then, within each (ICP, GAAP) bucket, perform cumulative zero-block
+    trimming: drop entries up to the last point where that bucket's
+    cumulative sum returns to (approx.) zero.
     """
     if df.empty:
         return df
 
-    # Ensure Posting Date is comparable
+    # Sort chronologically
     df = df.sort_values("Posting Date", ascending=True).reset_index(drop=True)
 
     def _norm_key(x):
-        """Normalize ICP/GAAP for equality: treat NaN/empty as ''."""
+        """Normalize ICP/GAAP for grouping & equality: treat NaN/empty as ''."""
         if pd.isna(x):
             return ""
-        s = str(x).strip()
-        return s
+        return str(x).strip()
 
+    # Normalized keys used for both pairwise and cumulative logic
+    df["_icp_norm"] = df["ICP CODE"].apply(_norm_key) if "ICP CODE" in df.columns else ""
+    df["_gaap_norm"] = df["GAAP Code"].apply(_norm_key) if "GAAP Code" in df.columns else ""
+
+    # ---------- 1) Pairwise zero removal within same ICP/GAAP ----------
     keep = [True] * len(df)
     for i in range(len(df)):
         if not keep[i]:
@@ -178,14 +184,8 @@ def remove_internal_zeroes(df, tol=TOLERANCE):
             if not keep[j]:
                 continue
 
-            # Normalized ICP / GAAP
-            icp_i = _norm_key(df.loc[i, "ICP CODE"]) if "ICP CODE" in df.columns else ""
-            icp_j = _norm_key(df.loc[j, "ICP CODE"]) if "ICP CODE" in df.columns else ""
-            gaap_i = _norm_key(df.loc[i, "GAAP Code"]) if "GAAP Code" in df.columns else ""
-            gaap_j = _norm_key(df.loc[j, "GAAP Code"]) if "GAAP Code" in df.columns else ""
-
-            same_icp = (icp_i == icp_j)
-            same_gaap = (gaap_i == gaap_j)
+            same_icp = (df.loc[i, "_icp_norm"] == df.loc[j, "_icp_norm"])
+            same_gaap = (df.loc[i, "_gaap_norm"] == df.loc[j, "_gaap_norm"])
 
             if same_icp and same_gaap and abs(df.loc[i, "Amount (LCY)"] + df.loc[j, "Amount (LCY)"]) <= tol:
                 # Exact opposite pair within same ICP/GAAP bucket -> drop both
@@ -194,15 +194,23 @@ def remove_internal_zeroes(df, tol=TOLERANCE):
 
     df = df[keep].copy()
 
-    # Cumulative zero-block trimming (unchanged)
-    df["cum"] = df["Amount (LCY)"].cumsum().round(2)
-    zero_indices = df.index[abs(df["cum"]) <= tol].tolist()
-    if zero_indices:
-        df = df.loc[zero_indices[-1] + 1:].copy()
+    # ---------- 2) Cumulative zero trimming per (ICP, GAAP) bucket ----------
+    def _trim_group(g):
+        if g.empty:
+            return g
+        g = g.copy()
+        g["cum"] = g["Amount (LCY)"].cumsum().round(2)
+        zero_idx = g.index[g["cum"].abs() <= tol].tolist()
+        if zero_idx:
+            last_zero = zero_idx[-1]
+            g = g.loc[g.index > last_zero]
+        g = g.drop(columns=["cum"])
+        return g
 
-    # remove helper
-    if "cum" in df.columns:
-        df = df.drop(columns=["cum"], errors=True)
+    df = df.groupby(["_icp_norm", "_gaap_norm"], group_keys=False).apply(_trim_group)
+
+    # Clean up helper columns and reindex
+    df = df.drop(columns=["_icp_norm", "_gaap_norm"], errors="ignore").reset_index(drop=True)
 
     return df
 
