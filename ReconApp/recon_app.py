@@ -2,65 +2,36 @@ import streamlit as st
 import pandas as pd
 from io import BytesIO
 from pathlib import Path
+from recon_engine import generate_reconciliation_file  # backend engine
 
-from recon_engine import generate_reconciliation_file  # your backend function
+# ============================================================
+# FIXED LOGO HANDLING — works on Streamlit Cloud
+# ============================================================
 
+# BASE_DIR = /mount/src/reconapp/ReconApp
+BASE_DIR = Path(__file__).resolve().parent
+logo_path = BASE_DIR / "static" / "company_logo.png"
 
+# Display logo at top
+if logo_path.exists():
+    st.image(str(logo_path), width=200)
+else:
+    st.warning(f"⚠ Logo not found at: {logo_path}")
 
-
-import os
-st.write("Current working directory:", os.getcwd())
-st.write("Files in CWD:", os.listdir())
-st.write("Files in static/:", os.listdir("static") if os.path.exists("static") else "static/ not found")
-
-
-
-
-
-
-
-
-
-
-
-# --- UI CONFIG --- #
+# ============================================================
+# STREAMLIT PAGE CONFIG
+# ============================================================
 st.set_page_config(
     page_title="Recon File Generator",
     layout="wide"
 )
 
+st.title("📊 EE Recon File Generator")
 st.write("Upload the required files below and generate a standardized reconciliation workbook.")
 
-
-# --- LOGO (optional but recommended) --- #
-logo_path = Path("ReconApp/static/company_logo.png")
-
-st.markdown("""
-    <style>
-        .logo-container {
-            display: flex;
-            align-items: center;
-            margin-bottom: 20px;
-        }
-        .logo-text {
-            font-size: 2rem;
-            font-weight: bold;
-            margin-left: 15px;
-        }
-    </style>
-""", unsafe_allow_html=True)
-
-st.markdown('<div class="logo-container">', unsafe_allow_html=True)
-
-# Insert logo image if it exists
-if logo_path.exists():
-    st.image(str(logo_path), width=150)
-
-# Insert title next to the logo
-st.markdown('<div class="logo-text"> EE Recon File Generator</div>', unsafe_allow_html=True)
-
-st.markdown('</div>', unsafe_allow_html=True)
-
+# ============================================================
+# USER UPLOADS
+# ============================================================
 
 st.header("Step 1 — Upload Inputs")
 
@@ -81,11 +52,14 @@ entries_file = st.file_uploader(
 # ICP Code
 icp_code = st.text_input("Enter ICP Code", placeholder="Example: SKPVAB")
 
-
 st.write("---")
 st.header("Step 2 — Generate Recon File")
 
 generate_button = st.button("Generate Recon File", type="primary")
+
+# ============================================================
+# RUN GENERATOR
+# ============================================================
 
 if generate_button:
 
@@ -95,7 +69,6 @@ if generate_button:
 
     with st.spinner("⏳ Generating reconciliation file..."):
 
-        # Call your engine logic
         output_bytes = generate_reconciliation_file(
             trial_balance_file,
             entries_file,
@@ -113,9 +86,3 @@ if generate_button:
 
 st.write("---")
 st.caption("EE Internal Tool — Powered by Streamlit")
-
-
-
-
-
-
