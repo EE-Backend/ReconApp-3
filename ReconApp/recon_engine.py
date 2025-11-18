@@ -148,14 +148,27 @@ def apply_borders(ws, top, bottom, left, right):
 # === INTERNAL ZEROING ===
 def remove_internal_zeroes(df, tol=TOLERANCE):
     """
-    Remove internal cancelling entries only when Document No., ICP CODE and GAAP Code are all identical.
-    Also perform cumulative zero-block trimming as previously.
+    Remove internal cancelling entries when:
+      - ICP CODE is the same (or empty/NaN in both lines), and
+      - GAAP Code is the same (or empty/NaN in both lines), and
+      - Amounts sum to ~0 within tolerance.
+
+    Document No. is intentionally ignored.
+
+    Also performs cumulative zero-block trimming as previously.
     """
     if df.empty:
         return df
 
     # Ensure Posting Date is comparable
     df = df.sort_values("Posting Date", ascending=True).reset_index(drop=True)
+
+    def _norm_key(x):
+        """Normalize ICP/GAAP for equality: treat NaN/empty as ''."""
+        if pd.isna(x):
+            return ""
+        s = str(x).strip()
+        return s
 
     keep = [True] * len(df)
     for i in range(len(df)):
@@ -164,17 +177,24 @@ def remove_internal_zeroes(df, tol=TOLERANCE):
         for j in range(i + 1, len(df)):
             if not keep[j]:
                 continue
-            same_icp = (df.loc[i, "ICP CODE"] == df.loc[j, "ICP CODE"])
-            same_gaap = (df.loc[i, "GAAP Code"] == df.loc[j, "GAAP Code"])
 
-            # Only consider cancellation when all grouping keys match
+            # Normalized ICP / GAAP
+            icp_i = _norm_key(df.loc[i, "ICP CODE"]) if "ICP CODE" in df.columns else ""
+            icp_j = _norm_key(df.loc[j, "ICP CODE"]) if "ICP CODE" in df.columns else ""
+            gaap_i = _norm_key(df.loc[i, "GAAP Code"]) if "GAAP Code" in df.columns else ""
+            gaap_j = _norm_key(df.loc[j, "GAAP Code"]) if "GAAP Code" in df.columns else ""
+
+            same_icp = (icp_i == icp_j)
+            same_gaap = (gaap_i == gaap_j)
+
             if same_icp and same_gaap and abs(df.loc[i, "Amount (LCY)"] + df.loc[j, "Amount (LCY)"]) <= tol:
+                # Exact opposite pair within same ICP/GAAP bucket -> drop both
                 keep[i] = keep[j] = False
                 break
 
     df = df[keep].copy()
 
-    # Cumulative zero-block trimming as before (drop everything up to last zero cumulative)
+    # Cumulative zero-block trimming (unchanged)
     df["cum"] = df["Amount (LCY)"].cumsum().round(2)
     zero_indices = df.index[abs(df["cum"]) <= tol].tolist()
     if zero_indices:
@@ -185,6 +205,7 @@ def remove_internal_zeroes(df, tol=TOLERANCE):
         df = df.drop(columns=["cum"], errors=True)
 
     return df
+
 
 
 # === WORKBOOK BUILDING ===
