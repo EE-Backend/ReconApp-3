@@ -652,13 +652,12 @@ def finalize_workbook_to_bytes(
         # Tangible fixed assets
         (
             [
-                (221110, 221450),
-                (222110, 222450),
-                (223110, 223450),
-                (224110, 224420),
-                (225110, 225450),
+                (142110, 142120),
+                (142210, 142220),
+                (143110, 143120),
+                (144110, 144120),
             ],
-            "Add documentation for Tangible fixed assets",
+            "Add documentation for Depreciation fixed assets",
         ),
         # Long-term receivables
         (
