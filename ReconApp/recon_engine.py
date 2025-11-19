@@ -189,7 +189,7 @@ def remove_internal_zeroes(df, tol=TOLERANCE):
             same_icp = (df.loc[i, "_icp_norm"] == df.loc[j, "_icp_norm"])
             same_gaap = (df.loc[i, "_gaap_norm"] == df.loc[j, "_gaap_norm"])
 
-            if same_icp and same_gaap and abs(df.loc[i, "Amount (LCY)"] + df.loc[j, "Amount (LCY)"]) <= tol:
+            if same_icp and same_gaap and abs(df.loc[i, "Amount (LCY)"] + df.loc[j, "Amount (LCY)"]) < tol:
                 # Exact opposite pair within same ICP/GAAP bucket -> drop both
                 keep[i] = keep[j] = False
                 break
@@ -202,7 +202,7 @@ def remove_internal_zeroes(df, tol=TOLERANCE):
             return g
         g = g.copy()
         g["cum"] = g["Amount (LCY)"].cumsum().round(2)
-        zero_idx = g.index[g["cum"].abs() <= tol].tolist()
+        zero_idx = g.index[g["cum"].abs() < tol].tolist()
         if zero_idx:
             last_zero = zero_idx[-1]
             g = g.loc[g.index > last_zero]
@@ -277,7 +277,7 @@ def build_workbook(trial_balance_df, entries_df, map_dir, acct_to_code, code_to_
                 years = sorted(acc_df["Year"].unique())
                 for y in years[:-1]:
                     y_sum = round(acc_df.loc[acc_df["Year"] == y, "Amount (LCY)"].sum(), 2)
-                    if abs(y_sum) <= tolerance:
+                    if abs(y_sum) < tolerance:
                         acc_df = acc_df[acc_df["Year"] != y]
 
             if acc_df.empty:
