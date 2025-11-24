@@ -528,24 +528,25 @@ def finalize_workbook_to_bytes(
             plc_norm["Company name"] = plc_norm["Company name"].astype(str).str.strip()
             plc_norm["Accountant"] = plc_norm["Accountant"].astype(str).str.strip()
             plc_norm["Controller"] = plc_norm["Controller"].astype(str).str.strip()
-            ws_front.cell(row_ptr + 4, 1, "Quarter & Year").font = Font(bold=True)
-            ws_front.cell(row_ptr + 4, 2, quarter_year)
 
     except Exception:
         plc_norm = None
 
     # Add PLC cards for selected ICP(s)
-    selected_icps = [ICP]
-    row_ptr = 3
-    for icp in selected_icps:
-        icp_key = str(icp).strip().upper()
-        row = plc_norm.loc[plc_norm["ICP code_norm"] == icp_key] if plc_norm is not None else pd.DataFrame()
-        ws_front.cell(row_ptr, 1, "ICP code").font = Font(bold=True)
-        ws_front.cell(row_ptr, 2, icp_key)
+selected_icps = [ICP]
+row_ptr = 3
+for icp in selected_icps:
+    icp_key = str(icp).strip().upper()
+    row = plc_norm.loc[plc_norm["ICP code_norm"] == icp_key] if plc_norm is not None else pd.DataFrame()
 
-        ws_front.cell(row_ptr + 1, 1, "Company name").font = Font(bold=True)
-        ws_front.cell(row_ptr + 2, 1, "Accountant").font = Font(bold=True)
-        ws_front.cell(row_ptr + 3, 1, "Controller").font = Font(bold=True)
+    ws_front.cell(row_ptr, 1, "ICP code").font = Font(bold=True)
+    ws_front.cell(row_ptr, 2, icp_key)
+
+    ws_front.cell(row_ptr + 1, 1, "Company name").font = Font(bold=True)
+    ws_front.cell(row_ptr + 2, 1, "Accountant").font = Font(bold=True)
+    ws_front.cell(row_ptr + 3, 1, "Controller").font = Font(bold=True)
+    ws_front.cell(row_ptr + 4, 1, "Quarter & Year").font = Font(bold=True)              
+    ws_front.cell(row_ptr + 4, 2, quarter_year)                                          
 
         if not row.empty:
             ws_front.cell(row_ptr + 1, 2, row.iloc[0]["Company name"])
@@ -558,6 +559,7 @@ def finalize_workbook_to_bytes(
 
         apply_borders(ws_front, top=row_ptr, bottom=row_ptr + 4, left=1, right=2)
         row_ptr += 7
+
 
     row_ptr += 1
     ws_front.cell(row_ptr, 1, "Automatically generated comments:").font = Font(bold=True, underline="single")
@@ -905,7 +907,9 @@ def generate_reconciliation_file(
     plc_path=plc_path,
     tolerance=tolerance,
     mismatch_accounts=mismatch_accounts,
-    bio.name = f"Recon File {icp_code} {quarter_year}.xlsx"
-
 )
+
+# correct way to attach name (optional — Streamlit doesn't use this)
+bio.name = f"Recon File {icp_code} {quarter_year}.xlsx"
+
     return bio
