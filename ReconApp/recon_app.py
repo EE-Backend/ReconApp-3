@@ -57,12 +57,6 @@ icp_code = st.text_input("Enter ICP Code", placeholder="Example: SKPVAB").strip(
 
 st.markdown("<div style='height:30px;'></div>", unsafe_allow_html=True)
 
-quarter_year = st.text_input(
-    "Quarter & Year",
-    placeholder="Q4 2025"
-).strip()
-
-
 # ============================================
 # STEP 2 — GENERATE
 # ============================================
@@ -70,7 +64,7 @@ st.markdown("## Step 2 — Generate Recon File")
 
 if st.button("Generate Recon File", type="primary"):
 
-    if not trial_balance_file or not entries_file or not icp_code or not quarter_year:
+    if not trial_balance_file or not entries_file or not icp_code:
         st.error("Please upload both files and enter the ICP Code.")
         st.stop()
 
@@ -79,8 +73,7 @@ if st.button("Generate Recon File", type="primary"):
             output_bytes = generate_reconciliation_file(
                 trial_balance_file,
                 entries_file,
-                icp_code.upper(),
-                quarter_year
+                icp_code.upper()
             )
         except Exception as e:
             st.error(f"❌ An error occurred:\n\n{e}")
@@ -91,14 +84,8 @@ if st.button("Generate Recon File", type="primary"):
     st.download_button(
         label="📥 Download Reconciliation Workbook",
         data=output_bytes,
-        file_name=f"Recon File {icp_code.upper()} {quarter_year}.xlsx",
+        file_name="Reconciliation_Mapped.xlsx",
         mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
     )
 
 st.caption("European Energy — Internal Tool")
-
-
-
-
-
-
