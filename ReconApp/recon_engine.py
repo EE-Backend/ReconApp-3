@@ -500,6 +500,7 @@ def finalize_workbook_to_bytes(
     plc_path=None,
     tolerance=TOLERANCE,
     mismatch_accounts=None,
+    quarter=None,
 ):
     """
     Adds front page, number/date formatting, hides gridlines, autofit, and returns bytes buffer.
@@ -552,8 +553,12 @@ def finalize_workbook_to_bytes(
             ws_front.cell(row_ptr + 2, 2, "—")
             ws_front.cell(row_ptr + 3, 2, "—")
 
-        apply_borders(ws_front, top=row_ptr, bottom=row_ptr + 3, left=1, right=2)
-        row_ptr += 6
+        ws_front.cell(row_ptr + 4, 1, "Current Quarter").font = Font(bold=True)
+        if quarter:
+            ws_front.cell(row_ptr + 4, 2, str(quarter))
+
+        apply_borders(ws_front, top=row_ptr, bottom=row_ptr + 4, left=1, right=2)
+        row_ptr += 7
 
     row_ptr += 1
     ws_front.cell(row_ptr, 1, "Automatically generated comments:").font = Font(bold=True, underline="single")
@@ -841,7 +846,7 @@ def finalize_workbook_to_bytes(
 
 
 # === PUBLIC: generate_reconciliation_file ===
-def generate_reconciliation_file(trial_balance_file, entries_file, icp_code, mapping_path=None, plc_path=None, tolerance=TOLERANCE):
+def generate_reconciliation_file(trial_balance_file, entries_file, icp_code, mapping_path=None, plc_path=None, tolerance=TOLERANCE, quarter=None):
     """
     Main entrypoint for Streamlit app.
     Inputs trial_balance_file and entries_file may be:
@@ -892,5 +897,6 @@ def generate_reconciliation_file(trial_balance_file, entries_file, icp_code, map
         plc_path=plc_path,
         tolerance=tolerance,
         mismatch_accounts=mismatch_accounts,
+        quarter=quarter,
     )
     return bio
