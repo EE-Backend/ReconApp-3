@@ -83,12 +83,20 @@ if st.button("Generate Recon File", type="primary"):
             st.stop()
 
     st.success("✅ Reconciliation file generated successfully!")
+  
+    if quarter:
+        file_name = f"Recon_{icp_code.upper()}_{quarter}.xlsx"
+    else:
+        file_name = f"Recon_{icp_code.upper()}.xlsx"
 
     st.download_button(
         label="📥 Download Reconciliation Workbook",
         data=output_bytes,
-        file_name="Reconciliation_Mapped.xlsx",
+        file_name=file_name,
         mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
     )
 
+
+
 st.caption("European Energy — Internal Tool")
+
