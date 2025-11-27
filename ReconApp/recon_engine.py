@@ -10,8 +10,7 @@ from openpyxl.drawing.image import Image
 import openpyxl.utils
 import time
 
-
-
+#Update#
 # === CONFIG / Defaults ===
 TOLERANCE = 0.001
 
