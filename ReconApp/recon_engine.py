@@ -508,6 +508,48 @@ def add_pl_balance_sheet(wb, trial_balance_df, code_to_meta):
 
     ws.column_dimensions["B"].hidden = True
 
+        # === UNMAPPED TOTALS BLOCK (only if unmapped exists and control != 0) ===
+    # Locate unmapped total by looking in trial_balance_df
+    unmapped_df = trial_balance_df[trial_balance_df["sheet_group"] == "Unmapped"]
+    unmapped_total = float(unmapped_df["Balance at Date"].sum()) if not unmapped_df.empty else 0.0
+
+    # Only create the box if unmapped total != 0
+    if abs(unmapped_total) > 0.01:
+
+        box_top = r_ctrl + 1  # first blank row under control line
+        row = box_top
+
+        # ----- Row 1: "Total unmapped" -----
+        ws.cell(row, 3, "Total unmapped").font = Font(bold=True)
+        ws.cell(row, 3).fill = header_fill
+
+        unm_cell = ws.cell(row, 4, unmapped_total)
+        unm_cell.number_format = "#,##0.00"
+        unm_cell.fill = header_fill
+
+        # ----- Row 2: "Diff." -----
+        row += 1
+        diff_label = ws.cell(row, 3, "Diff.")
+        diff_label.fill = entry_fill
+
+        # Formula: =D{control_row} + D{unmapped_row}
+        diff_cell = ws.cell(row, 4, f"=D{r_ctrl}+D{box_top}")
+        diff_cell.number_format = "#,##0.00"
+        diff_cell.fill = entry_fill
+
+        # Conditional colour (Python-evaluated)
+        diff_value = ctrl_val + unmapped_total
+        fill = green_fill if abs(diff_value) < 0.01 else red_fill
+        diff_label.fill = fill
+        diff_cell.fill = fill
+
+        # Apply thick border around the C–D box
+        apply_borders(ws, box_top, row, 3, 4)
+
+
+
+
+    
     # Autofit
     for col in ws.columns:
         max_len = max((len(str(c.value)) if c.value else 0) for c in col)
