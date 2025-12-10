@@ -319,9 +319,9 @@ def add_pl_balance_sheet(wb, trial_balance_df, code_to_meta):
                 ws.cell(row, 2, "")
                 tab_cell = ws.cell(row, 5, "")
                 tab_cell.fill = entry_fill
-    
-                # Track row
-                desc_row[desc] = row
+
+                # NEW LINE: track this equity Total profit row
+                desc_row["Total profit (Equity)"] = row
     
                 row += 1
                 continue
@@ -462,7 +462,7 @@ def add_pl_balance_sheet(wb, trial_balance_df, code_to_meta):
     r39 = code_row["39"]
 
     # Total equity = SUM(20–23) + Total profit
-    r_tp_equity = desc_row["Total profit"]  # the new one inside Equity
+    r_tp_equity = desc_row["Total profit (Equity)"]
     set_formula("Total equity", f"=SUM({d_ref(r20)}:{d_ref(r_tp_equity)})")
 
 
@@ -1223,7 +1223,7 @@ def finalize_workbook_to_bytes(
         ([(234110, 234120)], "Add documentation for Long-term receivables"),
         ([(311000, 311020)], "Add documentation for Trade receivables"),
         ([(321000, 321100)], "Add documentation for Amounts owed by affiliate companies"),
-        ([(391010, 391070), (393005, 393998)], "Add documentation for Bank account"),
+        ([(391010, 391070), (393001, 393998)], "Add documentation for Bank account"),
         ([(634010, 634011)], "Add documentation for Other I/C Loans"),
         ([(721000, 721001)], "Add documentation for Trade payables"),
         ([(731000, 731100)], "Add documentation for Amounts owed to affiliated companies"),
